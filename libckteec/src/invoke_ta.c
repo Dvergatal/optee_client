@@ -184,19 +184,14 @@ CK_RV ckteec_invoke_init(void)
 	uint32_t origin = 0;
 	TEEC_Result res = TEEC_SUCCESS;
 	CK_RV rv = CKR_CRYPTOKI_ALREADY_INITIALIZED;
-	int e;
+	int e = 0;
 
 	e = pthread_mutex_lock(&ta_ctx.init_mutex);
-	if (e) {
-		EMSG("pthread_mutex_lock: %s", strerror(e));
-		EMSG("terminating...");
-		exit(EXIT_FAILURE);
-	}
+	if (e)
+		return CKR_CANT_LOCK;
 
-	if (ta_ctx.initiated) {
-		rv = CKR_CRYPTOKI_ALREADY_INITIALIZED;
+	if (ta_ctx.initiated)
 		goto out;
-	}
 
 	res = TEEC_InitializeContext(NULL, &ta_ctx.context);
 	if (res != TEEC_SUCCESS) {
@@ -237,14 +232,11 @@ out:
 CK_RV ckteec_invoke_terminate(void)
 {
 	CK_RV rv = CKR_CRYPTOKI_NOT_INITIALIZED;
-	int e;
+	int e = 0;
 
 	e = pthread_mutex_lock(&ta_ctx.init_mutex);
-	if (e) {
-		EMSG("pthread_mutex_lock: %s", strerror(e));
-		EMSG("terminating...");
-		exit(EXIT_FAILURE);
-	}
+	if (e)
+		return CKR_CANT_LOCK;
 
 	if (!ta_ctx.initiated)
 		goto out;
